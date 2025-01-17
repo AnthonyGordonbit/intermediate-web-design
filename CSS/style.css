@@ -1,7 +1,4 @@
-body {background-color: black;}
+body {background-color: black;
+    color: hotpink;
+}
 
-header {color:hotpink;}
-
-h1 {color: hotpink;}
-
-p {color: hotpink;}
