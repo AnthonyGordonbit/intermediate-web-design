@@ -1,26 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/CSS/style.css">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./CSS/style.css">
+  <title>Heatherglen Golf Course Tee Time Booking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .booking-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .time-slot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .time-slot:last-child {
+      border-bottom: none;
+    }
+    .btn {
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .name-input {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+    .name-input label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .name-input input {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .name-form {
+      background-color: #f9f9f9;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .close-btn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      background-color: #dc3545;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    
-<header> Intermediate Web Design </header>
+  <h1>Heatherglen Golf Course Tee Time Booking</h1>
+  <div class="booking-container">
+    <h2>Available Tee Times</h2>
+    <div id="timeSlots"></div>
+    <p id="message" class="success"></p>
+  </div>
 
-<h1> AJ </h1>
+  <script>
+    // Generate time slots starting from 3:34 PM in 9-minute increments
+    const startTime = new Date();
+    startTime.setHours(15, 34, 0, 0);
 
-<p> Web design review!</p>
+    const timeSlots = [];
+    for (let i = 0; i < 20; i++) { // Generate 20 slots
+      const slotTime = new Date(startTime.getTime() + i * 9 * 60000);
+      const formattedTime = slotTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      timeSlots.push({ time: formattedTime, capacity: 4, names: [] });
+    }
 
-<p> I now look forward to fridays even more!</p>
+    // Render time slots in the DOM
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    timeSlots.forEach((slot, index) => {
+      const slotDiv = document.createElement('div');
+      slotDiv.className = 'time-slot';
+      slotDiv.innerHTML = `
+        <span>${slot.time}</span>
+        <button class="btn" onclick="openBookingForm(${index})">Book Now</button>
+        <div id="form-${index}" class="name-form" style="display: none;">
+          <div class="name-input">
+            <label for="name1-${index}">Player 1 Name:</label>
+            <input type="text" id="name1-${index}" required>
+          </div>
+          <div class="name-input">
+            <label for="name2-${index}">Player 2 Name:</label>
+            <input type="text" id="name2-${index}" required>
+          </div>
+          <div class="name-input">
+            <label for="name3-${index}">Player 3 Name:</label>
+            <input type="text" id="name3-${index}" required>
+          </div>
+          <div class="name-input">
+            <label for="name4-${index}">Player 4 Name:</label>
+            <input type="text" id="name4-${index}" required>
+          </div>
+          <button class="btn" onclick="submitBooking(${index})">Submit</button>
+          <button class="close-btn" onclick="closeBookingForm(${index})">Close</button>
+        </div>
+      `;
+      timeSlotsContainer.appendChild(slotDiv);
+    });
 
-<ul>
-    <li>Eat Breakfast</li>
-    <li> Pack Lunch</li>
-    <li class="business"> Meeting with boss</li>
-    <li class="business"> Proposal</li>
-</ul>
+    function openBookingForm(index) {
+      document.getElementById(`form-${index}`).style.display = 'block';
+    }
+
+    function closeBookingForm(index) {
+      document.getElementById(`form-${index}`).style.display = 'none';
+    }
+
+    function submitBooking(index) {
+      const slot = timeSlots[index];
+
+      const names = [
+        document.getElementById(`name1-${index}`).value,
+        document.getElementById(`name2-${index}`).value,
+        document.getElementById(`name3-${index}`).value,
+        document.getElementById(`name4-${index}`).value
+      ];
+
+      if (names.some(name => name.trim() === '')) {
+        alert('Please enter all player names.');
+        return;
+      }
+
+      if (slot.capacity === 0) {
+        alert('This slot is already booked. Finding the closest available time.');
+        const nextAvailable = findNextAvailableSlot(index);
+        if (nextAvailable !== null) {
+          openBookingForm(nextAvailable);
+        } else {
+          alert('No available slots left.');
+        }
+        return;
+      }
+
+      slot.names = names;
+      slot.capacity = 0; // Mark slot as fully booked
+
+      // Disable the button and show a message
+      const buttons = document.querySelectorAll('.btn');
+      buttons[index].disabled = true;
+      buttons[index].innerText = 'Booked';
+
+      const message = document.getElementById('message');
+      message.innerText = `You have successfully booked the ${slot.time} tee time for: ${names.join(', ')}.`;
+
+      // Hide the form
+      document.getElementById(`form-${index}`).style.display = 'none';
+    }
+
+    function findNextAvailableSlot(currentIndex) {
+      for (let i = currentIndex + 1; i < timeSlots.length; i++) {
+        if (timeSlots[i].capacity > 0) {
+          return i;
+        }
+      }
+      for (let i = 0; i < currentIndex; i++) {
+        if (timeSlots[i].capacity > 0) {
+          return i;
+        }
+      }
+      return null;
+    }
+  </script>
 </body>
 </html>
